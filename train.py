@@ -36,8 +36,9 @@ class PlTextDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.batch_size,
             shuffle=True,
-            num_workers=19,
+            num_workers=self.num_workers,
             collate_fn=collate_fn,
+            pin_memory=True
         )
 
     def val_dataloader(self):
@@ -45,8 +46,9 @@ class PlTextDataModule(pl.LightningDataModule):
             self.val_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            num_workers=19,
+            num_workers=self.num_workers,
             collate_fn=collate_fn,
+            pin_memory=True
         )
 
 

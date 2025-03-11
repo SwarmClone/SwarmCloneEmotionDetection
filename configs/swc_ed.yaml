@@ -10,8 +10,8 @@ data:
   params:
     path: /mnt/d/codes/Swc_Data/ecg_data/ecg_train_data.json
     val_ratio: 0.1
-    batch_size: 256
-    num_workers: 19
+    batch_size: 512
+    num_workers: 1
 
 logger:
   params:

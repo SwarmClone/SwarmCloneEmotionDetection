@@ -30,9 +30,9 @@ class TextDataset(Dataset):
 
     def __getitem__(self, idx):
         # Data format: [text, label]
-        sentence = self.tokenizer(self.samples[idx][0], return_tensors="pt")
+        sentence = self.tokenizer(self.samples[idx][0], return_tensors="pt")["input_ids"]
         label = torch.tensor(self.samples[idx][1], dtype=torch.long)
-        return {"input_ids": sentence["input_ids"].squeeze(0), "label": label}
+        return {"input_ids": sentence.squeeze(0), "label": label}
 
 
 def collate_fn(batch):
