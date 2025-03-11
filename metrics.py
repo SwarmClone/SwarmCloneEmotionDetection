@@ -30,5 +30,6 @@ def cal_metrics(model, dataloader, num_classes, is_train=False):
     print(f" * Accuracy: {avg_acc} \n")
     time.sleep(1)
     os.system("clear")
+    model.train()
     return avg_acc
     
