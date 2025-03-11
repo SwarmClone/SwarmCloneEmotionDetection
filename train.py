@@ -1,4 +1,4 @@
-import torchinfo
+import torch
 import pytorch_lightning as pl
 
 from omegaconf import OmegaConf
