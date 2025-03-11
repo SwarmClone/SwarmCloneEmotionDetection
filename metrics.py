@@ -14,7 +14,7 @@ def cal_metrics(model, dataloader, num_classes, is_train=False):
     i = 1
     train_part = len(dataloader) // 10
     
-    for batch in tqdm(dataloader, desc="Metrics Progress", unit="batch"):
+    for batch in tqdm(dataloader, desc=f"Metrics Progress for {'Train' if is_train else 'Val'}", unit="batch"):
         x = batch["input_ids"].to(model.device)
         y = batch["label"].to(model.device)
         y_hat, _ = model(x)

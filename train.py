@@ -59,7 +59,7 @@ class MetricsCallback(pl.Callback):
         self.val_dataloader = val_dataloader
 
     def on_train_epoch_end(self, trainer, pl_module):
-        avg_acc = cal_metrics(pl_module, self.train_dataloader, num_classes=6)
+        avg_acc = cal_metrics(pl_module, self.train_dataloader, num_classes=6, is_train=True)
         pl_module.log("train_acc", avg_acc, prog_bar=True, on_epoch=True)
 
     def on_validation_epoch_end(self, trainer, pl_module):
