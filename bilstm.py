@@ -11,12 +11,17 @@ class BiLSTM(nn.Module):
         super(BiLSTM, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
         self.lstm = nn.LSTM(
-            embedding_dim, hidden_dim, num_layers, batch_first=True, bidirectional=True
+            embedding_dim,
+            hidden_dim,
+            num_layers,
+            batch_first=True,
+            bidirectional=True,
+            dropout=0.5,
         )
         self.mlp = nn.Sequential(
             nn.Linear(hidden_dim * 2, hidden_dim * 4),
             nn.ReLU(),
-            nn.Dropout(p=0.2),
+            nn.Dropout(p=0.5),
             nn.Linear(hidden_dim * 4, hidden_dim * 2),
             nn.ReLU(),
             nn.Dropout(p=0.2),
@@ -40,13 +45,16 @@ class PlBiLSTM(pl.LightningModule):
         hidden_dim,
         num_layers,
         num_classes,
+        lr,
+        weight_decay,
     ):
         super().__init__()
         self.bilstm = BiLSTM(
             vocab_size, embedding_dim, hidden_dim, num_layers, num_classes
         )
         self.loss = nn.CrossEntropyLoss()
-        self.lr = 0.0001
+        self.lr = lr
+        self.weight_decay = weight_decay
 
     def forward(self, x):
         logits, out = self.bilstm(x)
@@ -87,7 +95,9 @@ class PlBiLSTM(pl.LightningModule):
         return
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
+        optimizer = torch.optim.AdamW(
+            self.parameters(), lr=self.lr, weight_decay=self.weight_decay
+        )
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer, T_max=200, eta_min=0
         )
