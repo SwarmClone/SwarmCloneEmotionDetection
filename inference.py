@@ -31,7 +31,7 @@ if __name__ == "__main__":
     model.from_pretrained("logs/ed/version_2/epoch=99-val_acc=0.9004.ckpt")
     
     emotion = ["中性", "喜爱", "悲伤", "厌恶", "愤怒", "高兴"]
-    from load_data import TextDataset
+    from load_data import ECGDataset
     # data = TextDataset("/mnt/d/codes/Swc_Data/ecg_data/ecg_train_data.json")
     # for idx, i in enumerate(data):
     #     out = model.inference(i["text"])

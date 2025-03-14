@@ -7,30 +7,42 @@ from torch.utils.data import DataLoader, random_split
 from pytorch_lightning import seed_everything
 
 from bilstm import PlBiLSTM
-from load_data import TextDataset, collate_fn
+from load_data import ECGDataset, SMP2020Dataset, collate_fn
 from metrics import cal_metrics
 
 
 class PlTextDataModule(pl.LightningDataModule):
-    def __init__(self, path, val_ratio=0.1, batch_size=32, num_workers=19):
+    def __init__(self, path, val_ratio=0.1, batch_size=32, num_workers=19, used_dataset="SMP2020"):
         super().__init__()
-        self.dataset = TextDataset(path)
+        self.used_dataset = used_dataset
+        if used_dataset == "ECG":
+            self.dataset = ECGDataset(path)
+        elif used_dataset == "SMP2020":
+            assert OmegaConf.is_list(path), "SMP2020 dataset need train and test path"
+            self.dataset = None
+            self.train_dataset = SMP2020Dataset(path[0])
+            self.val_dataset = SMP2020Dataset(path[1])
         self.val_ratio = val_ratio
         self.batch_size = batch_size
         self.seed = 42
         self.num_workers = num_workers
 
     def setup(self, stage=None):
-        num_of_data = len(self.dataset)
-        num_of_val = int(num_of_data * self.val_ratio)
-        num_of_train = num_of_data - num_of_val
+        if self.used_dataset == "ECG":
+            num_of_data = len(self.dataset)
+            num_of_val = int(num_of_data * self.val_ratio)
+            num_of_train = num_of_data - num_of_val
 
-        self.train_dataset, self.val_dataset = random_split(
-            self.dataset,
-            [num_of_train, num_of_val],
-            generator=Generator().manual_seed(self.seed),
-        )
-
+            self.train_dataset, self.val_dataset = random_split(
+                self.dataset,
+                [num_of_train, num_of_val],
+                generator=Generator().manual_seed(self.seed),
+            )
+        elif self.used_dataset == "SMP2020":
+            pass
+        else:
+            raise ValueError(f"Dataset {self.used_dataset} not found")
+        
     def train_dataloader(self):
         return DataLoader(
             self.train_dataset,
@@ -90,6 +102,6 @@ if __name__ == "__main__":
 
     metrics_callback = MetricsCallback(data.train_dataloader(), data.val_dataloader())
     callbacks.extend([ckpt_callback, metrics_callback])
-
     trainer = pl.Trainer(**config.lightning.trainer, logger=logger, callbacks=callbacks)
     trainer.fit(model, data)
+

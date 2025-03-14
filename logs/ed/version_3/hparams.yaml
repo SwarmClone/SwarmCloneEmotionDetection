@@ -5,17 +5,15 @@ model:
     hidden_dim: 128
     num_layers: 2
     num_classes: 6
-    use_extra_mlp: True
-    mlp_ratio: [4, 2]
     lr: 0.0001
-    weight_decay: 0.01
+    weight_decay: 0.5
 
 data:
   params:
     path: ["/mnt/d/codes/Swc_Data/smp2020/train/usual_train.txt", "/mnt/d/codes/Swc_Data/smp2020/test/real_test/usual_test_labeled.txt"]
     val_ratio: 0
-    batch_size: 128
-    num_workers: 1
+    batch_size: 256
+    num_workers: 19
     used_dataset: "SMP2020"
 
 logger:
