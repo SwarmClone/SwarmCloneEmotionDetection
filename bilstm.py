@@ -16,16 +16,23 @@ class BiLSTM(nn.Module):
         num_classes,
         use_extra_mlp=True,
         mlp_ratio=[4, 2],
+        mlp_dropout=[0.5, 0.2],
+        recurrent_dropout=0.2,
+        embedding_dropout=0.2
     ):
         super(BiLSTM, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        if embedding_dropout > 0:
+            self.embedding_dropout = nn.Dropout(p=embedding_dropout)
+        else:
+            self.embedding_dropout = nn.Identity()
         self.lstm = nn.LSTM(
             embedding_dim,
             hidden_dim,
             num_layers,
             batch_first=True,
             bidirectional=True,
-            # dropout=0.9,
+            dropout=recurrent_dropout,
         )
         self.use_extra_mlp = use_extra_mlp
         if self.use_extra_mlp:
@@ -33,10 +40,10 @@ class BiLSTM(nn.Module):
             self.mlp = nn.Sequential(
                 nn.Linear(hidden_dim * 2, hidden_dim * mlp_ratio[0]),
                 nn.ReLU(),
-                # nn.Dropout(p=0.9),
+                nn.Dropout(p=mlp_dropout[0]),
                 nn.Linear(hidden_dim * mlp_ratio[0], hidden_dim * mlp_ratio[1]),
                 nn.ReLU(),
-                # nn.Dropout(p=0.9),
+                nn.Dropout(p=mlp_dropout[1]),
                 nn.Linear(hidden_dim * mlp_ratio[1], num_classes),
             )
         else:
@@ -46,6 +53,8 @@ class BiLSTM(nn.Module):
 
     def forward(self, x):
         x = self.embedding(x)
+        x = self.embedding_dropout(x)
+            
         out, _ = self.lstm(x)
         logits = self.mlp(out[:, -1, :])
         out = self.softmax(logits)
@@ -84,6 +93,9 @@ class PlBiLSTM(pl.LightningModule):
         num_classes,
         use_extra_mlp=True,
         mlp_ratio=[4, 2],
+        mlp_dropout=[0.5, 0.2],
+        recurrent_dropout=0.2,
+        embedding_dropout=0.2,
         lr=0.0001,
         weight_decay=0.01,
     ):
@@ -96,6 +108,9 @@ class PlBiLSTM(pl.LightningModule):
             num_classes,
             use_extra_mlp,
             mlp_ratio,
+            mlp_dropout,
+            recurrent_dropout,
+            embedding_dropout
         )
         self.loss = nn.CrossEntropyLoss()
         self.lr = lr
@@ -138,6 +153,9 @@ class PlBiLSTM(pl.LightningModule):
             sync_dist=True,
         )
         return
+    
+    def on_before_optimizer_step(self, optimizer):
+        torch.nn.utils.clip_grad_norm_(self.parameters(), 0.5)
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(
