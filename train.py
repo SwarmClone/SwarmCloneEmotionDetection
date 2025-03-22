@@ -6,7 +6,7 @@ from torch import Generator
 from torch.utils.data import DataLoader, random_split
 from pytorch_lightning import seed_everything
 
-from bilstm import PlBiLSTM
+from models.bilstm import PlBiLSTM
 from load_data import ECGDataset, SMP2020Dataset, collate_fn
 from metrics import cal_metrics
 

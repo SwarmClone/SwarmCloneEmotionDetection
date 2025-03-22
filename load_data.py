@@ -9,10 +9,12 @@ from transformers import AutoTokenizer, pipeline
 
 import random
 import jieba
+
 jieba.setLogLevel(jieba.logging.ERROR)
 
+
 class ECGDataset(Dataset):
-    def __init__(self, path):
+    def __init__(self, path, for_transformer=False):
         data = open(path, "r")
         data = json.load(data)
         samples = []
@@ -28,21 +30,37 @@ class ECGDataset(Dataset):
         print(f" * Tokenizer: bert-base-chinese with vocab size {self.vocab_size}")
         print(f" * Pad token id: {self.tokenizer.pad_token_id}")
         self.samples = samples
+        self.for_transformer = for_transformer
 
     def __len__(self):
         return len(self.samples)
 
     def __getitem__(self, idx):
         # Data format: [text, label]
-        sentence = self.tokenizer(self.samples[idx][0], return_tensors="pt")[
-            "input_ids"
-        ]
-        label = torch.tensor(self.samples[idx][1], dtype=torch.long)
-        return {
-            "input_ids": sentence.squeeze(0),
-            "label": label,
-            "text": self.samples[idx][0],
-        }
+        if not self.for_transformer:
+            sentence = self.tokenizer(self.samples[idx][0], return_tensors="pt")["input_ids"]
+            label = torch.tensor(self.samples[idx][1], dtype=torch.long)
+            return {
+                "input_ids": sentence.squeeze(0),
+                "label": label,
+                "text": self.samples[idx][0],
+            }
+        else:
+            sentence = self.tokenizer(
+                self.samples[idx][0],
+                padding="max_length",
+                truncation=True,
+                max_length=256,
+                return_tensors="pt",
+            )
+            label = torch.tensor(self.samples[idx][1], dtype=torch.long)
+            return {
+                "input_ids": sentence["input_ids"].squeeze(0),
+                "attention_mask": sentence["attention_mask"].squeeze(0),
+                "label": label,
+                "text": self.samples[idx][0],
+            }
+
 
 
 class SMP2020Dataset(Dataset):
@@ -84,7 +102,9 @@ class SMP2020Dataset(Dataset):
 
         for idx in indices:
             # 构造 mask 后的句子。中文中可直接拼接，无需额外空格
-            masked_sentence = "".join(new_words[:idx]) + "[MASK]" + "".join(new_words[idx + 1:])
+            masked_sentence = (
+                "".join(new_words[:idx]) + "[MASK]" + "".join(new_words[idx + 1 :])
+            )
             predictions = self.fill_mask(masked_sentence, top_k=5)
 
             # 从预测结果中选取与原词不同的候选词进行替换
