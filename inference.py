@@ -13,11 +13,14 @@ class BiLSTMModelScope(BiLSTM):
         hidden_dim,
         num_layers,
         num_classes,
-        use_extra_mlp=False,
-        mlp_ratio=0.5,
-        mlp_dropout=0.2,
+        use_extra_mlp=True,
+        mlp_ratio=[4, 2],
+        mlp_dropout=[0.5, 0.2],
         recurrent_dropout=0.2,
         embedding_dropout=0.2,
+        lr=0.0001,
+        weight_decay=0.01,
+        label_smoothing=0.1
     ):
         super().__init__(
             vocab_size,
@@ -49,12 +52,12 @@ class BiLSTMModelScope(BiLSTM):
 
 
 if __name__ == "__main__":
-    config = OmegaConf.load("logs/ed/version_0/hparams.yaml")
+    config = OmegaConf.load("logs/ed/ECG_0/hparams.yaml")
     model_config = config.model.params
     model_config.pop("lr")
     model_config.pop("weight_decay")
     model = BiLSTMModelScope(**model_config)
-    model.from_pretrained("logs/ed/version_0/epoch=29-val_acc=0.8834.ckpt")
+    model.from_pretrained("logs/ed/ECG_0/epoch=99-val_acc=0.9004.ckpt")
 
     emotion = ["中性", "喜爱", "悲伤", "厌恶", "愤怒", "高兴"]
     # emotion = ["neutral", "happy", "angry", "sad", "fear", "surprise"]

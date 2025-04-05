@@ -28,7 +28,7 @@ def cal_metrics(model, dataloader, num_classes, is_train=False, for_transformer=
         if for_transformer:
             y_hat, _ = model(x, mask)
         else:
-            y_hat = model(x)
+            y_hat, _ = model(x)
             
         acc.update(y_hat, y)
         del x, y, y_hat

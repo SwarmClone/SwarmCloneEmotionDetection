@@ -88,15 +88,13 @@ class MetricsCallback(pl.Callback):
             pl_module,
             self.train_dataloader,
             num_classes=6,
-            for_transformer=True,
+            for_transformer=False,
             is_train=True,
         )
         pl_module.log("train_acc", avg_acc, prog_bar=True, on_epoch=True)
 
     def on_validation_epoch_end(self, trainer, pl_module):
-        avg_acc = cal_metrics(
-            pl_module, self.val_dataloader, num_classes=6, for_transformer=True
-        )
+        avg_acc = cal_metrics(pl_module, self.val_dataloader, num_classes=6, for_transformer=False)
         pl_module.log("val_acc", avg_acc, prog_bar=True, on_epoch=True)
 
 
@@ -104,10 +102,10 @@ if __name__ == "__main__":
     seed_everything(42)
     torch.set_float32_matmul_precision("high")
 
-    config = OmegaConf.load("configs/transformer.yaml")
+    config = OmegaConf.load("configs/bilstm.yaml")
 
-    # model = PlBiLSTM(**config.model.params)
-    model = PlTransformer(**config.model.params)
+    model = PlBiLSTM(**config.model.params)
+    # model = PlTransformer(**config.model.params)
     data = PlTextDataModule(**config.data.params)
     data.setup()
 

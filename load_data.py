@@ -24,10 +24,13 @@ class ECGDataset(Dataset):
             samples.append(sample[0])
             samples.append(sample[1])
 
-        self.tokenizer = AutoTokenizer.from_pretrained("bert-base-chinese")
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "/home/momoia/codes/MiniLM2/models/tokenizers/tokenizer64k",
+            trust_remote_code=True,
+        )
         self.vocab_size = self.tokenizer.vocab_size
         print(f" * Load data from {path} with {len(samples)} samples")
-        print(f" * Tokenizer: bert-base-chinese with vocab size {self.vocab_size}")
+        print(f" * Tokenizer: MiniLM2 with vocab size {self.vocab_size}")
         print(f" * Pad token id: {self.tokenizer.pad_token_id}")
         self.samples = samples
         self.for_transformer = for_transformer
@@ -39,9 +42,12 @@ class ECGDataset(Dataset):
     def __getitem__(self, idx):
         # Data format: [text, label]
         if not self.for_transformer:
-            sentence = self.tokenizer(self.samples[idx][0], return_tensors="pt")["input_ids"]
+            sentence = self.tokenizer(self.samples[idx][0], return_tensors="pt")[
+                "input_ids"
+            ]
             label = torch.tensor(self.samples[idx][1], dtype=torch.long)
             return {
+                "original_text": self.samples[idx][0],
                 "input_ids": sentence.squeeze(0),
                 "label": label,
                 "text": self.samples[idx][0],
@@ -63,7 +69,6 @@ class ECGDataset(Dataset):
             }
 
 
-
 class SMP2020Dataset(Dataset):
     def __init__(self, path, do_augment=False):
         # 加载数据
@@ -73,10 +78,13 @@ class SMP2020Dataset(Dataset):
         for sample in tqdm(data, desc="Loading data"):
             samples.append([sample["content"], self.emotions.index(sample["label"])])
 
-        self.tokenizer = AutoTokenizer.from_pretrained("bert-base-chinese")
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "/home/momoia/codes/MiniLM2/models/tokenizers/tokenizer64k",
+            trust_remote_code=True,
+        )
         self.vocab_size = self.tokenizer.vocab_size
         print(f" * Load data from {path} with {len(samples)} samples")
-        print(f" * Tokenizer: bert-base-chinese with vocab size {self.vocab_size}")
+        print(f" * Tokenizer: MiniLM2 with vocab size {self.vocab_size}")
         print(f" * Pad token id: {self.tokenizer.pad_token_id}")
         self.samples = samples
         self.do_augment = do_augment
@@ -201,11 +209,15 @@ if __name__ == "__main__":
     # for sample in data:
     #     print(sample["content"], sample["label"], emotions.index(sample["label"]))
 
-    train_dataset = SMP2020Dataset(
-        "/mnt/d/codes/Swc_Data/smp2020/train/usual_train.txt", do_augment=True
-    )
+    # train_dataset = SMP2020Dataset("/mnt/d/codes/Swc_Data/smp2020/train/usual_train.txt", do_augment=True)
+    # for idx, sample in enumerate(train_dataset):
+    #     if sample["auged"]:
+    #         print(sample["text"], sample["original_text"], sample["auged"])
+    #     if idx > 100:
+    #         break
+
+    train_dataset = ECGDataset("/mnt/d/codes/Swc_Data/ecg_data/ecg_train_data.json")
     for idx, sample in enumerate(train_dataset):
-        if sample["auged"]:
-            print(sample["text"], sample["original_text"], sample["auged"])
+        print(sample["text"], sample["input_ids"])
         if idx > 100:
             break
