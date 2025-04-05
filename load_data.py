@@ -14,7 +14,7 @@ jieba.setLogLevel(jieba.logging.ERROR)
 
 
 class ECGDataset(Dataset):
-    def __init__(self, path, for_transformer=False):
+    def __init__(self, path, for_transformer=False, max_length=256):
         data = open(path, "r")
         data = json.load(data)
         samples = []
@@ -31,6 +31,7 @@ class ECGDataset(Dataset):
         print(f" * Pad token id: {self.tokenizer.pad_token_id}")
         self.samples = samples
         self.for_transformer = for_transformer
+        self.max_length = max_length
 
     def __len__(self):
         return len(self.samples)
@@ -50,7 +51,7 @@ class ECGDataset(Dataset):
                 self.samples[idx][0],
                 padding="max_length",
                 truncation=True,
-                max_length=256,
+                max_length=self.max_length,
                 return_tensors="pt",
             )
             label = torch.tensor(self.samples[idx][1], dtype=torch.long)

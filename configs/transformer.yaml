@@ -1,0 +1,40 @@
+model:
+  params:
+    vocab_size: 21128
+    embedding_dim: 512
+    hidden_dim: 128
+    num_layers: 6
+    num_classes: 6
+    num_heads: 4
+    use_extra_mlp: True
+    extra_mlp_ratio: 4
+    mlp_ratio: 4
+    dropout: 0.
+    embedding_dropout: 0
+    max_len: 64
+    lr: 0.0001
+    label_smoothing: 0.1
+
+data:
+  params:
+    path: /mnt/d/codes/Swc_Data/ecg_data/ecg_train_data.json
+    val_ratio: 0.1
+    batch_size: 128
+    num_workers: 3
+    used_dataset: "ECG"
+    for_transformer: True
+    max_len: 64
+
+logger:
+  params:
+    save_dir: logs/
+    name: ed
+
+lightning:
+  trainer:
+    max_epochs: 200
+    # gradient_clip_val: 0.1
+    # gradient_clip_algorithm: "norm"
+    accelerator: "gpu"
+    devices: 1
+    enable_progress_bar: true # 显示进度条
