@@ -162,7 +162,7 @@ class PlBiLSTM(pl.LightningModule):
             self.parameters(), lr=self.lr, weight_decay=self.weight_decay
         )
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=200, eta_min=0
+            optimizer, T_max=self.trainer.max_epochs, eta_min=0
         )
         return {
             "optimizer": optimizer,
