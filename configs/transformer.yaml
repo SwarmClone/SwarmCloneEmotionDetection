@@ -1,7 +1,7 @@
 model:
   params:
-    vocab_size: 21128
-    embedding_dim: 512
+    vocab_size: 65536
+    embedding_dim: 64
     hidden_dim: 128
     num_layers: 6
     num_classes: 6
@@ -11,19 +11,20 @@ model:
     mlp_ratio: 4
     dropout: 0.
     embedding_dropout: 0
-    max_len: 64
-    lr: 0.0001
+    max_len: 18
+    lr: 0.01
     label_smoothing: 0.1
 
 data:
   params:
     path: /mnt/d/codes/Swc_Data/ecg_data/ecg_train_data.json
     val_ratio: 0.1
-    batch_size: 128
+    batch_size: 64
     num_workers: 3
     used_dataset: "ECG"
     for_transformer: True
-    max_len: 64
+    do_augment: False
+    max_len: 18
 
 logger:
   params:

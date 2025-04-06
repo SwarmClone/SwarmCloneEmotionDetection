@@ -20,7 +20,7 @@ class BiLSTMModelScope(BiLSTM):
         embedding_dropout=0.2,
         lr=0.0001,
         weight_decay=0.01,
-        label_smoothing=0.1
+        label_smoothing=0.1,
     ):
         super().__init__(
             vocab_size,
@@ -34,7 +34,10 @@ class BiLSTMModelScope(BiLSTM):
             recurrent_dropout,
             embedding_dropout,
         )
-        self.tokenizer = AutoTokenizer.from_pretrained("bert-base-chinese")
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "/home/momoia/codes/MiniLM2/models/tokenizers/tokenizer64k",
+            trust_remote_code=True,
+        )
         self.eval()
 
     def from_pretrained(self, path):
@@ -52,16 +55,16 @@ class BiLSTMModelScope(BiLSTM):
 
 
 if __name__ == "__main__":
-    config = OmegaConf.load("logs/ed/version_0/hparams.yaml")
+    config = OmegaConf.load("logs/ed/version_1/hparams.yaml")
     model_config = config.model.params
     model_config.pop("lr")
     model_config.pop("weight_decay")
     model = BiLSTMModelScope(**model_config)
-    model.from_pretrained("logs/ed/version_0/epoch=8-val_acc=0.9060.ckpt")
+    model.from_pretrained("logs/ed/version_1/17-0.9117.ckpt")
 
     emotion = ["中性", "喜爱", "悲伤", "厌恶", "愤怒", "高兴"]
     # emotion = ["neutral", "happy", "angry", "sad", "fear", "surprise"]
-    
+
     from load_data import ECGDataset
 
     # data = TextDataset("/mnt/d/codes/Swc_Data/ecg_data/ecg_train_data.json")
@@ -72,8 +75,8 @@ if __name__ == "__main__":
     #         break
 
     while True:
-        text = input("输出测试文本(输入y退出): ")
-        if text == "y":
+        text = input("输出测试文本(输入q退出): ")
+        if text == "q":
             break
         out = model.inference(text)
         print(

@@ -1,0 +1,36 @@
+model:
+  params:
+    vocab_size: 65536
+    embedding_dim: 150
+    hidden_dim: 384
+    num_layers: 2
+    num_classes: 6
+    use_extra_mlp: True
+    mlp_ratio: [4, 2]
+    mlp_dropout: [0.5, 0.2]
+    recurrent_dropout: 0.2
+    embedding_dropout: 0.2
+    lr: 0.0001
+    weight_decay: 0.01
+    label_smoothing: 0.2
+
+data:
+  params:
+    path: /mnt/d/codes/Swc_Data/ecg_data/ecg_train_data.json
+    val_ratio: 0.1
+    batch_size: 64
+    num_workers: 3
+    used_dataset: "ECG"
+    for_transformer: False
+
+logger:
+  params:
+    save_dir: logs/
+    name: ed
+
+lightning:
+  trainer:
+    max_epochs: 20
+    accelerator: "gpu"
+    devices: 1
+    enable_progress_bar: true # 显示进度条

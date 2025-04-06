@@ -70,7 +70,7 @@ class ECGDataset(Dataset):
 
 
 class SMP2020Dataset(Dataset):
-    def __init__(self, path, do_augment=False):
+    def __init__(self, path, for_transformer=False, max_length=256, do_augment=False):
         # 加载数据
         data = json.load(open(path, "r", encoding="utf-8"))
         samples = []
@@ -87,6 +87,8 @@ class SMP2020Dataset(Dataset):
         print(f" * Tokenizer: MiniLM2 with vocab size {self.vocab_size}")
         print(f" * Pad token id: {self.tokenizer.pad_token_id}")
         self.samples = samples
+        self.for_transformer = for_transformer
+        self.max_length = max_length
         self.do_augment = do_augment
 
         if self.do_augment:
@@ -178,20 +180,35 @@ class SMP2020Dataset(Dataset):
     def __getitem__(self, idx):
         original_sentence = self.samples[idx][0]
         sentence = original_sentence
+        if not self.for_transformer:
+            if self.do_augment and random.random() < 0.6:
+                sentence = self.augment_text(sentence)
 
-        if self.do_augment and random.random() < 0.6:
-            sentence = self.augment_text(sentence)
+            input_ids = self.tokenizer(sentence, return_tensors="pt")["input_ids"]
+            label = torch.tensor(self.samples[idx][1], dtype=torch.long)
 
-        input_ids = self.tokenizer(sentence, return_tensors="pt")["input_ids"]
-        label = torch.tensor(self.samples[idx][1], dtype=torch.long)
-
-        return {
-            "input_ids": input_ids.squeeze(0),
-            "label": label,
-            "text": sentence,
-            "original_text": original_sentence,
-            "auged": sentence != original_sentence,
-        }
+            return {
+                "input_ids": input_ids.squeeze(0),
+                "label": label,
+                "text": sentence,
+                "original_text": original_sentence,
+                "auged": sentence != original_sentence,
+            }
+        else:
+            sentence = self.tokenizer(
+                sentence,
+                padding="max_length",
+                truncation=True,
+                max_length=self.max_length,
+                return_tensors="pt",
+            )
+            label = torch.tensor(self.samples[idx][1], dtype=torch.long)
+            return {
+                "input_ids": sentence["input_ids"].squeeze(0),
+                "attention_mask": sentence["attention_mask"].squeeze(0),
+                "label": label,
+                "text": self.samples[idx][0],
+            }
 
 
 def collate_fn(batch):

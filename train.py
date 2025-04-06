@@ -22,6 +22,7 @@ class PlTextDataModule(pl.LightningDataModule):
         used_dataset="SMP2020",
         for_transformer=False,
         max_len=256,
+        do_augment=False,
     ):
         super().__init__()
         self.used_dataset = used_dataset
@@ -30,8 +31,8 @@ class PlTextDataModule(pl.LightningDataModule):
         elif used_dataset == "SMP2020":
             assert OmegaConf.is_list(path), "SMP2020 dataset need train and test path"
             self.dataset = None
-            self.train_dataset = SMP2020Dataset(path[0])
-            self.val_dataset = SMP2020Dataset(path[1])
+            self.train_dataset = SMP2020Dataset(path[0], for_transformer, max_len, do_augment=do_augment)
+            self.val_dataset = SMP2020Dataset(path[1], for_transformer, max_len, do_augment=do_augment)
         self.val_ratio = val_ratio
         self.batch_size = batch_size
         self.seed = 42
@@ -91,11 +92,11 @@ class MetricsCallback(pl.Callback):
             for_transformer=False,
             is_train=True,
         )
-        pl_module.log("train_acc", avg_acc, prog_bar=True, on_epoch=True)
+        pl_module.log("metrics/train_acc", avg_acc, prog_bar=True, on_epoch=True)
 
     def on_validation_epoch_end(self, trainer, pl_module):
         avg_acc = cal_metrics(pl_module, self.val_dataloader, num_classes=6, for_transformer=False)
-        pl_module.log("val_acc", avg_acc, prog_bar=True, on_epoch=True)
+        pl_module.log("metrics/val_acc", avg_acc, prog_bar=True, on_epoch=True)
 
 
 if __name__ == "__main__":
@@ -114,9 +115,12 @@ if __name__ == "__main__":
     callbacks = []
     ckpt_callback = pl.callbacks.ModelCheckpoint(
         dirpath="checkpoints/",
-        filename="{epoch}-{val_acc:.4f}",
-        monitor="val_acc",
+        filename="{epoch}-{metrics/val_acc:.4f}",
+        monitor="metrics/val_acc",
+        auto_insert_metric_name=False,
         mode="max",
+        save_top_k=3,
+        
     )
 
     metrics_callback = MetricsCallback(data.train_dataloader(), data.val_dataloader())
